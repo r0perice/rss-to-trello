@@ -2,8 +2,6 @@ from tinydb import TinyDB, Query
 
 class DatabaseUtils:
 
-    db = None
-
     def __init__(self, database):
         self.db = database
 

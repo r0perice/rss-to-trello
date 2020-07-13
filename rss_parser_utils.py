@@ -6,14 +6,11 @@ from database_utils import DatabaseUtils
 
 class RssParserUtils:
 
-    database_utils = None
-    card_utils = None
-    list_utils = None
     card_name_and_rss_feeds = {}
 
-    def __init__(self, database_utils, card_utils, list_utils):
+    def __init__(self, database_utils, list_utils):
         self.database_utils = database_utils
-        self.card_utils = card_utils
+        self.card_utils = list_utils.get_card_utils()
         self.list_utils = list_utils
 
     def registerRssFeeds(self):

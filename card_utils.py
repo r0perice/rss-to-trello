@@ -2,25 +2,23 @@ import requests
 import json
 
 from base_utils import BaseUtils
+from config_keys import ApiAccess, Trello
+from trello_api_constants import Lists, Cards
 
-class CardUtils:
+class CardUtils(BaseUtils):
 
-    rss_feed_board_id = ""
-    key = ""
-    token = ""
 
-    def __init__(self, rss_feed_board_id, key, token):
-        super().__init__()
-        self.rss_feed_board_id = rss_feed_board_id
-        self.key = key
-        self.token = token
+    def __init__(self, config):
+       super().__init__(config)
 
     def create_card_in_list(self, list_id, card_name):
-        url = "https://api.trello.com/1/cards"
+        url = Cards.MAIN_API_PREFIX
 
-        query = self.get_base_query()
-        query['idList'] = list_id
-        query['name'] = card_name
+        pre_query = {
+                    'idList':list_id,
+                    'name':card_name
+                    }
+        query = super().build_query(pre_query)
 
 
         response = requests.request(
@@ -30,9 +28,9 @@ class CardUtils:
         )
     
     def get_cards_id_in_list(self, list_id):
-        url = "https://api.trello.com/1/lists/" + list_id + "/cards"
+        url = Lists.MAIN_API_PREFIX + list_id + Cards.CARDS_SUFFIX
 
-        query = self.get_base_query()
+        query = super().build_query()
 
         response = requests.request(
             "GET",
@@ -48,10 +46,11 @@ class CardUtils:
                     cards_id_list.append(v)
         return cards_id_list
 
-    def get_cards_names_in_list(self, list_id):
-        url = "https://api.trello.com/1/lists/" + list_id + "/cards"
 
-        query = self.get_base_query()
+    def get_cards_names_in_list(self, list_id):
+        url = Lists.MAIN_API_PREFIX + list_id + Cards.CARDS_SUFFIX
+
+        query = super().build_query()
 
         response = requests.request(
             "GET",
@@ -69,9 +68,9 @@ class CardUtils:
 
 
     def get_card_name_from_id(self, card_id):
-        url = "https://api.trello.com/1/cards/" + card_id 
+        url = Cards.MAIN_API_PREFIX + card_id 
 
-        query = self.get_base_query()
+        query = super().build_query()
 
         response = requests.request(
             "GET",
@@ -84,9 +83,9 @@ class CardUtils:
 
 
     def get_card_attachment_json(self, card_id):
-        url = "https://api.trello.com/1/cards/"+ card_id + "/attachments"
+        url = Cards.MAIN_API_PREFIX + card_id + Cards.CARDS_ATTACHMENT_SUFFIX
 
-        query = self.get_base_query()
+        query = super().build_query()
 
         response = requests.request(
             "GET",
@@ -102,15 +101,3 @@ class CardUtils:
 
     def get_attachment_url_from_json(self, attachment_json):
         return attachment_json['url']
-
-
-    def get_base_query(self):
-        query = {
-            'key': self.key,
-            'token': self.token
-        }
-        return query
-
-
-    def get_rss_feed_board_id(self):
-        return self.rss_feed_board_id

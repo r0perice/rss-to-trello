@@ -2,26 +2,22 @@ import requests
 import json
 
 from card_utils import CardUtils
+from base_utils import BaseUtils
+from config_keys import ApiAccess, Trello
+from trello_api_constants import Lists, Boards
 
-class ListUtils:
+class ListUtils(BaseUtils):
 
-    rss_feed_board_id = ""
-    key = ""
-    token = ""
-    card_utils = None
-    def __init__(self, card_utils, rss_feed_board_id, key, token):
-        super().__init__()
-        self.rss_feed_board_id = rss_feed_board_id
-        self.key = key
-        self.token = token
-        self.card_utils = card_utils
+    def __init__(self, config):
+        super().__init__(config)
+        self.card_utils = CardUtils(config)
 
 
     def get_list_id_from_name(self, list_name):
-        rss_feed_board_id = self.get_rss_feed_board_id()
-        url = "https://api.trello.com/1/boards/" + rss_feed_board_id + "/lists"
+        rss_feed_board_id = super().get_rss_feed_board_id()
+        url = Boards.MAIN_API_PREFIX + rss_feed_board_id + Lists.LISTS_SUFFIX
 
-        query = self.get_base_query()
+        query = super().build_query()
 
         response = requests.request(
             "GET",
@@ -61,10 +57,10 @@ class ListUtils:
 
  
     def delete_list_from_id(self, list_id):
-        url = "https://api.trello.com/1/lists/" + list_id +"/closed"
+        url = Lists.MAIN_API_PREFIX + list_id + Lists.LISTS_CLOSED_SUFFIX
 
-        query = self.get_base_query()
-        query['value'] = 'true'
+        pre_query = {'value':'true'}
+        query = super().build_query(pre_query)
 
         response = requests.request(
             "PUT",
@@ -77,12 +73,15 @@ class ListUtils:
         feeds_list_pos = self.get_list_pos_from_id(feeds_list_id)
         new_list_pos = feeds_list_pos + 1
 
-        url = "https://api.trello.com/1/lists"
+        url = Lists.MAIN_API_PREFIX
 
-        query = self.get_base_query()
-        query['name'] = list_name
-        query['idBoard'] = self.get_rss_feed_board_id()
-        query['pos'] = new_list_pos
+        
+        pre_query = {
+                    'name':list_name,
+                    'idBoard':super().get_rss_feed_board_id(),
+                    'pos':new_list_pos
+                    }
+        query = super().build_query(pre_query)
         
 
         requests.request(
@@ -93,9 +92,9 @@ class ListUtils:
 
 
     def get_list_pos_from_id(self, list_id):
-        url = "https://api.trello.com/1/lists/" + list_id
+        url = Lists.MAIN_API_PREFIX + list_id
 
-        query = self.get_base_query()
+        query = super().build_query()
 
         response = requests.request(
             "GET",
@@ -108,10 +107,10 @@ class ListUtils:
 
 
     def get_all_list_ids(self):
-        rss_feed_board_id = self.get_rss_feed_board_id()
-        url = "https://api.trello.com/1/boards/" + rss_feed_board_id + "/lists"
+        rss_feed_board_id = super().get_rss_feed_board_id()
+        url = Boards.MAIN_API_PREFIX + rss_feed_board_id + Lists.LISTS_SUFFIX
 
-        query = self.get_base_query()
+        query = super().build_query()
 
         response = requests.request(
             "GET",
@@ -128,10 +127,10 @@ class ListUtils:
         return ids
 
     def get_all_list_names(self):
-        rss_feed_board_id = self.get_rss_feed_board_id()
-        url = "https://api.trello.com/1/boards/" + rss_feed_board_id + "/lists"
+        rss_feed_board_id = super().get_rss_feed_board_id()
+        url = Boards.MAIN_API_PREFIX + rss_feed_board_id + Lists.LISTS_SUFFIX
 
-        query = self.get_base_query()
+        query = super().build_query()
 
         response = requests.request(
             "GET",
@@ -147,14 +146,5 @@ class ListUtils:
                     ids.append(v)
         return ids
 
-
-    def get_base_query(self):
-        query = {
-             'key': self.key,
-            'token': self.token
-        }
-        return query
-
-
-    def get_rss_feed_board_id(self):
-        return self.rss_feed_board_id
+    def get_card_utils(self):
+        return self.card_utils

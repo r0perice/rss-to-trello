@@ -10,16 +10,13 @@ from card_utils import CardUtils
 from list_utils import ListUtils
 from rss_parser_utils import RssParserUtils
 from database_utils import DatabaseUtils
-
+from  config_keys import ApiAccess, Trello
 
 
 card_name_and_rss_feeds = {}
 
 
 class RssToTrello:
-
-    rss_parser_utils = None
-    list_utils = None
 
     def __init__(self, rss_parser_utils):
         self.rss_parser_utils = rss_parser_utils
@@ -37,10 +34,15 @@ class RssToTrello:
 
 db = TinyDB('C:/Users/Robin Perice/Desktop/rss-to-trello.json')
 
+config = { 
+        ApiAccess.TRELLO_API_KEY:slack_api_key,
+        ApiAccess.TRELLO_API_TOKEN:slack_api_token,
+        Trello.RSS_FEED_BOARD_ID:rss_feed_board_id
+        }
+
 database_util = DatabaseUtils(db)
-card_utils = CardUtils(rss_feed_board_id,slack_api_key,slack_api_token)
-list_util = ListUtils(card_utils,rss_feed_board_id,slack_api_key,slack_api_token)
-parser = RssParserUtils(database_util, card_utils, list_util)
+list_util = ListUtils(config)
+parser = RssParserUtils(database_util, list_util)
 rss = RssToTrello(parser,)
 
 
