@@ -5,7 +5,7 @@ import json
 from card_utils import CardUtils
 from base_utils import BaseUtils
 from config_keys import ApiAccess, Trello
-from trello_api_constants import Lists, Boards
+from trello_api_constants import Lists, Boards, Cards
 
 class ListUtils(BaseUtils):
 
@@ -38,8 +38,8 @@ class ListUtils(BaseUtils):
 
         for card_id in cards_id_list:
             list_name = self.card_utils.get_card_name_from_id(card_id)
-
-            if not list_name in all_list_names:
+            attachement = self.card_utils.get_card_attachment_json(card_id)
+            if (not list_name in all_list_names) and (attachement is not None) :
                 self.create_list(list_name)
 
 
@@ -61,6 +61,7 @@ class ListUtils(BaseUtils):
         query = super().build_query(pre_query)
 
         requests.put(url, query)
+
 
     def create_list(self, list_name: str) -> None:
         feeds_list_id = self.get_list_id_from_name(self.FEEDS_BOARD_NAME)
@@ -106,6 +107,7 @@ class ListUtils(BaseUtils):
                     ids.append(v)
         return ids
 
+
     def get_all_list_names(self) -> dict:
         rss_feed_board_id = super().get_rss_feed_board_id()
         url = Boards.MAIN_API_PREFIX + rss_feed_board_id + Lists.LISTS_SUFFIX
@@ -122,6 +124,18 @@ class ListUtils(BaseUtils):
                 if key == "name":
                     ids.append(value)
         return ids
+
+
+    def get_number_of_cards_in_list(self, list_id: str) -> int:
+        url = Lists.MAIN_API_PREFIX + list_id + Cards.CARDS_SUFFIX
+
+        query = super().build_query()
+
+        response = requests.get(url, query)
+
+        dict_response = super().convert_reponse_into_list_dict(response)
+        return len(dict_response)
+
 
     def get_card_utils(self) -> CardUtils:
         return self.card_utils

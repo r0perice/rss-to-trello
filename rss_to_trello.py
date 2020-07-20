@@ -8,6 +8,7 @@ import hashlib
 from tinydb import TinyDB, Query
 from card_utils import CardUtils
 from list_utils import ListUtils
+from board_utils import BoardUtils
 from rss_parser_utils import RssParserUtils
 from database_utils import DatabaseUtils
 from config_keys import ApiAccess, Trello
@@ -20,6 +21,11 @@ class RssToTrello:
     def __init__(self, rss_parser_utils: RssParserUtils):
         self.rss_parser_utils = rss_parser_utils
         self.list_utils = rss_parser_utils.list_utils
+
+    def create_labels(self) -> None:
+        self.rss_parser_utils.board_utils.create_label_on_board(BoardUtils.MISSING_RSS_FEED_URL_LABEL_NAME, "red")
+        self.rss_parser_utils.board_utils.create_label_on_board(BoardUtils.MISSING_RSS_FEED_URL_LABEL_NAME, "green")
+        self.rss_parser_utils.board_utils.create_label_on_board(BoardUtils.NEW_ARTICLE_LABEL_NAME, "purple")
     
     def refresh_list(self) -> None:
         self.list_utils.clean_feed_list()
@@ -41,8 +47,10 @@ config = {
 
 database_util = DatabaseUtils(db)
 list_util = ListUtils(config)
-parser = RssParserUtils(database_util, list_util)
-rss = RssToTrello(parser,)
+board_utils = BoardUtils(config)
+parser = RssParserUtils(database_util, list_util, board_utils)
+rss = RssToTrello(parser)
+rss.create_labels()
 
 
 ## MAIN LOOP

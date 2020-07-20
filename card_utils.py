@@ -12,18 +12,21 @@ class CardUtils(BaseUtils):
     def __init__(self, config: dict):
        super().__init__(config)
 
-    def create_card_in_list(self, list_id: str, card: Card) -> None:
+    def create_card_in_list(self, list_id: str, card: Card) -> str:
         url = Cards.MAIN_API_PREFIX
 
         pre_query = {
                     'idList':list_id,
                     'name':card.get_title(),
                     'desc':self.build_description(card),
-                    'urlSource ':card.get_link()
+                    'urlSource ':card.get_link(),
+                    'pos': "top"
                     }
         query = super().build_query(pre_query)
 
-        requests.post(url, query)
+        response  = requests.post(url, query)
+        dict_response = super().convert_response_into_dict(response)
+        return dict_response.get('id')
 
     
     def get_cards_id_in_list(self, list_id: str) -> dict:
@@ -81,6 +84,7 @@ class CardUtils(BaseUtils):
             return dict_reponse[0]
         else:
             return None
+
 
     def get_attachment_url_from_json(self, attachment_json: dict) -> str:
         return attachment_json.get('url')
