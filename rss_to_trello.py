@@ -15,7 +15,6 @@ from config_keys import ApiAccess, Trello
 
 
 
-
 class RssToTrello:
 
     def __init__(self, rss_parser_utils: RssParserUtils):
@@ -25,11 +24,11 @@ class RssToTrello:
     def create_labels(self) -> None:
         self.rss_parser_utils.board_utils.create_label_on_board(BoardUtils.MISSING_RSS_FEED_URL_LABEL_NAME, "red")
         self.rss_parser_utils.board_utils.create_label_on_board(BoardUtils.MISSING_RSS_FEED_URL_LABEL_NAME, "green")
-        self.rss_parser_utils.board_utils.create_label_on_board(BoardUtils.NEW_ARTICLE_LABEL_NAME, "purple")
-    
-    def refresh_list(self) -> None:
-        self.list_utils.clean_feed_list()
-        self.list_utils.create_feeds_lists()
+        self.rss_parser_utils.board_utils.create_label_on_board(BoardUtils.NEW_ARTICLES_LABEL_NAME, "purple")
+        self.rss_parser_utils.board_utils.create_label_on_board(BoardUtils.OLD_ARTICLES_LABEL_NAME, "black")
+
+    def refresh_lists(self) -> None:
+        self.list_utils.refresh_board()
         self.rss_parser_utils.register_rss_feeds()
     
     def refresh_rss(self) -> None:
@@ -54,7 +53,7 @@ rss.create_labels()
 
 
 ## MAIN LOOP
-schedule.every(1).seconds.do(rss.refresh_list)
+schedule.every(1).seconds.do(rss.refresh_lists)
 schedule.every(10).seconds.do(rss.refresh_rss)
 
 

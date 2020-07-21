@@ -6,7 +6,7 @@ class Card:
         super().__init__()
         self.title = article.title
         self.link = article.link
-        self.description = article.description
+        self.description = article.description        
 
     def get_title(self):
         return self.title
@@ -16,6 +16,8 @@ class Card:
     
     def get_description(self):
         return self.description
+
+
 
 
 

@@ -10,3 +10,6 @@ class Lists:
 
 class Boards:
     MAIN_API_PREFIX = "https://api.trello.com/1/boards/"
+
+class Labels:
+    MAIN_API_PREFIX = "https://api.trello.com/1/labels/"

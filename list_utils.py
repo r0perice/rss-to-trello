@@ -3,17 +3,27 @@ from requests import Response
 import json
 
 from card_utils import CardUtils
+from card import Card
 from base_utils import BaseUtils
+from board_utils import BoardUtils
 from config_keys import ApiAccess, Trello
+from emoji_codes import EmojiCodes
 from trello_api_constants import Lists, Boards, Cards
+
 
 class ListUtils(BaseUtils):
 
+    NEW_ARTICLES_HEADER_POSITION = 0;
+    OLD_ARTICLES_HEADER_POSITION = 5;
+
     FEEDS_BOARD_NAME = "Feeds"
+
+    headers_name_and_id = {}
 
     def __init__(self, config: dict):
         super().__init__(config)
         self.card_utils = CardUtils(config)
+        self.board_utils = BoardUtils(config)
 
 
     def get_list_id_from_name(self, list_name: str) -> dict:
@@ -30,8 +40,16 @@ class ListUtils(BaseUtils):
                 if key == "name" and value == list_name:
                     return list_item['id']
 
+    def refresh_board(self):
+        self.__remove_useless_lists()
+        self.__create_feeds_lists()
+        
+        
 
-    def create_feeds_lists(self):
+    def __create_feeds_lists(self):
+        """
+        create lists in the board from the "feeds" cards' list
+        """
         feeds_list_id = self.get_list_id_from_name(self.FEEDS_BOARD_NAME)
         cards_id_list = self.card_utils.get_cards_id_in_list(feeds_list_id)
         all_list_names = self.get_all_list_names()
@@ -39,16 +57,37 @@ class ListUtils(BaseUtils):
         for card_id in cards_id_list:
             list_name = self.card_utils.get_card_name_from_id(card_id)
             attachement = self.card_utils.get_card_attachment_json(card_id)
+            # if the list is not already created and if their is and attachment
+            # on the "feeds" card then create the list
             if (not list_name in all_list_names) and (attachement is not None) :
-                self.create_list(list_name)
+                self.create_rss_list(list_name)
 
 
-    def clean_feed_list(self) -> None:
+    def create_rss_list(self, list_name: str) -> None:
+        list_id = self.create_list(list_name)
+
+        new_articles_header_card_id = self.card_utils.create_header_card(list_id, 
+            EmojiCodes.ROCKET + " " + BoardUtils.NEW_ARTICLES_LABEL_NAME, ListUtils.NEW_ARTICLES_HEADER_POSITION)
+        self.headers_name_and_id[BoardUtils.NEW_ARTICLES_LABEL_NAME + list_id] = new_articles_header_card_id
+        self.board_utils.set_card_label(new_articles_header_card_id, BoardUtils.NEW_ARTICLES_LABEL_NAME)
+
+        new_articles_header_card_post = int(self.card_utils.get_card_pos_in_list(new_articles_header_card_id))
+        old_articles_header_card_id = self.card_utils.create_header_card(list_id, 
+            EmojiCodes.TIME + " " + BoardUtils.OLD_ARTICLES_LABEL_NAME, str(new_articles_header_card_post + 1))
+        self.headers_name_and_id[BoardUtils.OLD_ARTICLES_LABEL_NAME + list_id] = old_articles_header_card_id
+        self.board_utils.set_card_label(old_articles_header_card_id, BoardUtils.OLD_ARTICLES_LABEL_NAME)
+
+
+    def __remove_useless_lists(self) -> None:
+        """
+        Remove all irrelevant lists from the board 
+        """
         feeds_list_id = self.get_list_id_from_name(self.FEEDS_BOARD_NAME)
         feeds_card_names = self.card_utils.get_cards_names_in_list(feeds_list_id)
         all_list_names = self.get_all_list_names()
 
         for list_name in all_list_names:
+            # if list is not in "feeds" cards' list and it is not "feeds" list
             if not list_name in feeds_card_names and list_name != self.FEEDS_BOARD_NAME :
                 list_id = self.get_list_id_from_name(list_name)
                 self.delete_list_from_id(list_id)    
@@ -63,7 +102,7 @@ class ListUtils(BaseUtils):
         requests.put(url, query)
 
 
-    def create_list(self, list_name: str) -> None:
+    def create_list(self, list_name: str) -> str:
         feeds_list_id = self.get_list_id_from_name(self.FEEDS_BOARD_NAME)
         feeds_list_pos = self.get_list_pos_from_id(feeds_list_id)
         new_list_pos = feeds_list_pos + 1
@@ -77,8 +116,9 @@ class ListUtils(BaseUtils):
                     }
         query = super().build_query(pre_query)
 
-        requests.post(url, query)
-
+        response = requests.post(url, query)
+        dict_reponse = super().convert_response_into_dict(response)
+        return dict_reponse.get('id')
 
     def get_list_pos_from_id(self, list_id: str) -> str:
         url = Lists.MAIN_API_PREFIX + list_id

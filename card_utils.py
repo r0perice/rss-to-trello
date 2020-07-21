@@ -12,7 +12,7 @@ class CardUtils(BaseUtils):
     def __init__(self, config: dict):
        super().__init__(config)
 
-    def create_card_in_list(self, list_id: str, card: Card) -> str:
+    def create_card_in_list(self, list_id: str, card: Card, pos: str = "top") -> str:
         url = Cards.MAIN_API_PREFIX
 
         pre_query = {
@@ -20,13 +20,28 @@ class CardUtils(BaseUtils):
                     'name':card.get_title(),
                     'desc':self.build_description(card),
                     'urlSource ':card.get_link(),
-                    'pos': "top"
+                    'pos': pos
                     }
         query = super().build_query(pre_query)
 
         response  = requests.post(url, query)
         dict_response = super().convert_response_into_dict(response)
         return dict_response.get('id')
+
+
+    def create_header_card(self, list_id: str, card_name: str, card_pos: str) -> str:
+        url = Cards.MAIN_API_PREFIX
+
+        pre_query = {
+                    'idList':list_id,
+                    'name':card_name,
+                    'pos':card_pos
+                    }
+        query = super().build_query(pre_query)
+
+        response  = requests.post(url, query)
+        dict_response = super().convert_response_into_dict(response)
+        return dict_response.get('id')        
 
     
     def get_cards_id_in_list(self, list_id: str) -> dict:
@@ -59,6 +74,15 @@ class CardUtils(BaseUtils):
                 if k == "name":
                     cards_id_list.append(v)
         return cards_id_list
+
+    def get_card_pos_in_list(self, card_id: str) -> str:
+        url = Cards.MAIN_API_PREFIX + card_id
+
+        query = super().build_query()
+
+        response  = requests.get(url, query)
+        dict_response = super().convert_response_into_dict(response)
+        return dict_response.get('pos')   
 
 
     def get_card_name_from_id(self, card_id: str) -> str:
